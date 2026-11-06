@@ -10,6 +10,7 @@ import {planRefresh,selectedOrderStage} from './refresh-plan.mjs';
 import {findSavedInvoices} from './saved-invoices.mjs';
 import {createZip} from './zip-archive.mjs';
 const {isIssued,hasInvoiceLink,hasChatImages}=createRequire(import.meta.url)('./public/order-summary.js');
+const EventDates=createRequire(import.meta.url)('./public/date-range.js');
 
 const root=resolve(fileURLToPath(new URL('.',import.meta.url))), helper=resolve(process.env.INVOICE_HELPER_DIR||join(root,'../engine')), data=join(root,'.data');
 await mkdir(data,{recursive:true,mode:0o700});
@@ -30,6 +31,7 @@ async function runTask(kind,eventId,options){
  if(options.forceDownloadIds?.length)args.push(`--force-download-ids=${options.forceDownloadIds.join(',')}`);
  if(kind==='scan'){
    args.push('--fresh','--execute','--confirm=YES_EXECUTE_TAOBAO_INVOICE_ACTIONS','--action=refresh','--apply-chat-card',`--start-date=${options.start}`,`--end-date=${options.end}`,'--max-pages=60');
+   if(options.ranges?.length)args.push(`--date-ranges=${options.ranges.map(r=>`${r.start}:${r.end}`).join(',')}`);
    if(options.savedIds.length)args.push(`--skip-saved-ids=${options.savedIds.join(',')}`);
    if(options.eventOrderIds.length)args.push(`--event-order-ids=${options.eventOrderIds.join(',')}`);
    if(options.excludedOrderIds?.length)args.push(`--exclude-order-ids=${options.excludedOrderIds.join(',')}`);
@@ -47,7 +49,7 @@ async function runTask(kind,eventId,options){
    await writeFile(join(helper,progress),JSON.stringify({version:'0.1.0',mappings:[{bizOrderId:source.id,platform:source.platform,orderDate:source.date,amount:source.amount,shopName:source.shop,url:source.url,detailUrl:source.detailUrl}],resultsById:{}}),{mode:0o600});
    args.push('--execute','--confirm=YES_EXECUTE_TAOBAO_INVOICE_ACTIONS',`--action=${kind}`,`--order-id=${source.id}`);
  }
- const task={id,kind,eventId,status:'running',startedAt:new Date().toISOString(),log:kind==='refresh'?[`已跳过 ${options.stages.saved} 笔已保存 PDF；开票中 ${options.stages.pending} 笔，有入口待确认 ${options.stages.entry} 笔，客服聊天 ${options.stages.contact} 笔；另有 ${options.stages.unknown} 笔状态无法分类。`]:kind==='scan'?[`扫描订单及发票状态：${options.savedIds.length} 笔已有查看发票的订单将跳过逐笔检查，按 Event 订单顺序检查；另包含 ${options.manualOrderMappings?.length||0} 笔手动补录订单（不受日期范围限制）；只读取客服消息，不发送消息或提交申请。`]:[],rows:[],output,...(['scan','refresh'].includes(kind)?{range:{start:options.start,end:options.end}}:{}),...(kind==='refresh'?{stages:options.stages}:{})};tasks.set(id,task);active=task;
+ const task={id,kind,eventId,status:'running',startedAt:new Date().toISOString(),log:kind==='refresh'?[`已跳过 ${options.stages.saved} 笔已保存 PDF；开票中 ${options.stages.pending} 笔，有入口待确认 ${options.stages.entry} 笔，客服聊天 ${options.stages.contact} 笔；另有 ${options.stages.unknown} 笔状态无法分类。`]:kind==='scan'?[`扫描日期：${EventDates.formatRange(options.ranges||{start:options.start,end:options.end})}；${options.savedIds.length} 笔已有查看发票的订单将跳过逐笔检查，按 Event 订单顺序检查；另包含 ${options.manualOrderMappings?.length||0} 笔手动补录订单（不受日期范围限制）；只读取客服消息，不发送消息或提交申请。`]:[],rows:[],output,...(['scan','refresh'].includes(kind)?{range:EventDates.storeRange(options.ranges||{start:options.start,end:options.end})}:{}),...(kind==='refresh'?{stages:options.stages}:{})};tasks.set(id,task);active=task;
  const child=spawn(process.execPath,args,{cwd:helper,env:{...process.env,FORCE_COLOR:'0'},stdio:['ignore','pipe','pipe']});task.child=child;
  function log(chunk){task.log.push(...chunk.toString().replace(/\x1b\[[0-9;]*m/g,'').split(/\r?\n/).filter(Boolean));task.log=task.log.slice(-100)}child.stdout.on('data',log);child.stderr.on('data',log);
  child.on('error',e=>{task.log.push(`启动失败：${e.message}`)});
@@ -114,8 +116,10 @@ const server=http.createServer(async(req,res)=>{try{
    let v=await json(req),state=await readState(),ev=state.events.find(e=>e.id===v.eventId);if(!ev)throw Error('Event 不存在');
    if(v.kind==='scan'){
      if(active)throw Error('已有任务运行中，请先等待或停止');
-     if(!date(v.start)||!date(v.end)||v.start>v.end)throw Error('日期范围无效');
-     if(!ev.range||ev.range.start!==v.start||ev.range.end!==v.end)throw Error('Event 日期已变化，请刷新后重新确认');
+     const ranges=EventDates.normalizeRanges(Array.isArray(v.ranges)?v.ranges:[{start:v.start,end:v.end}]),eventRanges=EventDates.normalizeRanges(ev.range);
+     if(!ranges)throw Error('日期范围无效');
+     if(!eventRanges||JSON.stringify(eventRanges)!==JSON.stringify(ranges))throw Error('Event 日期已变化，请刷新后重新确认');
+     const start=ranges[0].start,end=ranges.at(-1).end;
      const orders=(ev.orders||[]).filter(o=>/^\d{8,30}$/.test(o.id||''));
      const {savedIds,recovered}=await findSavedInvoices(orders,helper);
      const recoveredById=new Map(recovered.map(item=>[item.id,item.invoice]));
@@ -125,11 +129,11 @@ const server=http.createServer(async(req,res)=>{try{
      const manualOrderMappings=orders.filter(o=>o.manualAdded===true).map(o=>({bizOrderId:o.id,platform:o.platform==='tmall'?'tmall':'taobao',orderDate:o.date||'',amount:o.amount||'',shopName:o.shop||''}));
      const requestedStages={contact:[],system:[]};for(const o of orders){const stage=selectedOrderStage(o);if(stage==='contact_requested')requestedStages.contact.push(o.id);else if(stage==='system_requested')requestedStages.system.push(o.id)}
      const excludedOrderIds=(ev.excludedOrderIds||[]).filter(id=>typeof id==='string'&&/^\d{8,30}$/.test(id));
-     return send(res,200,{id:await runTask('scan',v.eventId,{...v,savedIds:[...savedIds],eventOrderIds,manualOrderMappings,excludedOrderIds,requestedStages,forceDownloadIds:orders.filter(o=>o.invoiceLinkRemoved).map(o=>o.id)}),recovered:retainedRecovered});
+     return send(res,200,{id:await runTask('scan',v.eventId,{...v,start,end,ranges,savedIds:[...savedIds],eventOrderIds,manualOrderMappings,excludedOrderIds,requestedStages,forceDownloadIds:orders.filter(o=>o.invoiceLinkRemoved).map(o=>o.id)}),recovered:retainedRecovered});
    }
    if(v.kind==='refresh'){
      if(active)throw Error('已有任务运行中，请先等待或停止');
-     if(!ev.range||!date(ev.range.start)||!date(ev.range.end)||ev.range.start>ev.range.end)throw Error('请先设置 Event 日期');
+     const eventRange=EventDates.storeRange(ev.range);if(!eventRange)throw Error('请先设置 Event 日期');
      if(v.orderId!==undefined && (typeof v.orderId!=='string'||!/^\d{8,30}$/.test(v.orderId)))throw Error('订单号无效');
      const orders=(ev.orders||[]).filter(o=>/^\d{8,30}$/.test(o.id||'')&&(v.orderId===undefined||o.id===v.orderId));
      if(v.orderId!==undefined&&!orders.length)throw Error('该 Event 不包含此订单');
@@ -140,7 +144,7 @@ const server=http.createServer(async(req,res)=>{try{
      const {groups,ordered}=planRefresh(orders,savedIds),stages=Object.fromEntries(Object.entries(groups).map(([k,v])=>[k,v.length]));
      if(v.orderId!==undefined&&!ordered.length)ordered.push({order:orders[0],stage:'entry'});
      if(!ordered.length)return send(res,200,{id:null,stages,recovered});
-     return send(res,200,{id:await runTask('refresh',v.eventId,{...ev.range,ordered,stages,applyChatCard:v.orderId!==undefined,forceDownloadIds:orders.filter(o=>o.invoiceLinkRemoved).map(o=>o.id)}),stages,recovered});
+     return send(res,200,{id:await runTask('refresh',v.eventId,{...eventRange,ordered,stages,applyChatCard:v.orderId!==undefined,forceDownloadIds:orders.filter(o=>o.invoiceLinkRemoved).map(o=>o.id)}),stages,recovered});
    }
    if(!['apply','download'].includes(v.kind)||v.confirm!==true)throw Error('操作或确认无效');
    if(active)throw Error('已有任务运行中，请先等待或停止');
