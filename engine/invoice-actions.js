@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 61826)
-Total output lines: 5718
+Warning: truncated output (original token count: 62119)
+Total output lines: 5741
 
 // 淘宝发票动作计划生成器
 // 默认只做 dry-run：识别下载、查看、申请开票、换开等候选动作，不提交表单。
@@ -36,6 +36,12 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
+function validIsoDate(value) {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    && !Number.isNaN(Date.parse(`${value}T00:00:00Z`))
+    && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
+}
+
 function buildDefaultDateRange() {
   const today = new Date();
   return {
@@ -65,6 +71,8 @@ function parseArgs() {
     action: 'plan',
     startDate: defaultRange.startDate,
     endDate: defaultRange.endDate,
+    dateRanges: [],
+    dateRangesRaw: '',
     downloadDir: 'downloads',
     config: 'invoice-config.json',
     closeOnFinish: false,
@@ -140,6 +148,7 @@ function parseArgs() {
     if (key === 'action') args.action = value || args.action;
     if (key === 'start-date') args.startDate = value || args.startDate;
     if (key === 'end-date') args.endDate = value || args.endDate;
+    if (key === 'date-ranges') args.dateRangesRaw = value;
     if (key === 'download-dir') args.downloadDir = value || args.downloadDir;
     if (key === 'config') args.config = value || args.config;
     if (key === 'results-csv') {
@@ -153,6 +162,19 @@ function parseArgs() {
     if (key === 'modified-ledger') args.modifiedLedger = value || args.modifiedLedger;
     if (key === 'chat-reply-ledger') args.chatReplyLedger = value || args.chatReplyLedger;
     if (key === 'snapshot-dir') args.snapshotDir = value || args.snapshotDir;
+  }
+
+  if (args.dateRangesRaw) {
+    const ranges = args.dateRangesRaw.split(',').map(item => {
+      const [start, end, ...extra] = item.split(':');
+      return {start, end, extra};
+    });
+    if (!ranges.length || ranges.some(r => r.extra.length || !validIsoDate(r.start) || !validIsoDate(r.end) || r.start > r.end)) {
+      throw new Error('多日期范围无效，请使用 YYYY-MM-DD:YYYY-MM-DD 格式');
+    }
+    args.dateRanges = ranges.map(({start, end}) => ({start, end})).sort((a, b) => a.start.localeCompare(b.start));
+    args.startDate = args.dateRanges[0].start;
+    args.endDate = args.dateRanges.reduce((latest, range) => range.end > latest ? range.end : latest, args.dateRanges[0].end);
   }
 
   if (args.action === 'chat' || args.action === 'chat-followup') {
@@ -1038,6 +1060,7 @@ function looksLikePlatformCustomerService(url) {
 
 function isDateInRange(dateText) {
   if (!dateText) return false;
+  if (cliArgs.dateRanges.length) return cliArgs.dateRanges.some(range => dateText >= range.start && dateText <= range.end);
   return dateText >= cliArgs.startDate && dateText <= cliArgs.endDate;
 }
 
@@ -1513,31 +1536,7 @@ async function extractBizOrderIds(page) {
 
         const container = link.closest('[id^="shopOrderContainer_"]') || link.closest('.trade-container') || link.parentElement;
         const containerText = container?.innerText || '';
-        const orderDate = containerText.match(/\d{4}-\d{2}-\d{2}/)?.[0] || '';
-        const amountMatch = containerText.match(/实付款[\s\S]{0,20}?¥\s*([0-9.,]+)/) || containerText.match(/￥\s*([0-9.,]+)/);
-        const amount = amountMatch?.[1] ? amountMatch[1].replace(/,/g, '') : '';
-        const shopName = (
-          container?.querySelector('a[class*="shopInfoName--"], a[class*="shopInfoName"]')?.innerText
-          || containerText.match(/([\u4e00-\u9fa5A-Za-z0-9_-]{2,40}(旗舰店|专卖店|企业店|店铺))/)?.[1]
-          || ''
-        ).trim();
-
-        results.push({
-          bizOrderId,
-          platform: tmallMatch ? 'tmall' : 'taobao',
-          orderDate,
-          amount,
-          shopName,
-          listTransactionStatus:(container?.querySelector('[class*="shopInfoStatus--"]')?.textContent||'').trim(),
-          url: new URL(href.startsWith('//') ? `https:${href}` : href, location.href).href,
-        });
-      });
-      return results;
-    });
-
-    const dateRangeMappings = mappings.filter(mapping => !mapping.orderDate || isDateInRange(mapping.orderDate));
-    const inRangeMappings = dateRangeMappings.filter(mapping => !excludedIds.has(String(mapping.bizOrderId)));
-    const excludedOnPage = dateR…31826 tokens truncated…T_GUARD_FILE,guards);
+        const orderDate = containerText.match(/\d{4}-\d{2}-\d{2}/)?.[0] || …32119 tokens truncated…T_GUARD_FILE,guards);
   return {ok:true};
 }
 
