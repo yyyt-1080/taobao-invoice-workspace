@@ -1,0 +1,163 @@
+# 票夹新手指南（Mac 与 Windows）
+
+[中文](beginner-guide.md) · [English](../en/beginner-guide.md) · [项目首页](../../README.md)
+
+本指南适合第一次使用电脑本地程序的人。按你的电脑选择 Mac 或 Windows 部分。首次安装完成后，日常只需启动票夹，不必重复安装 Node.js、依赖或浏览器。
+
+> **先了解扫描会做什么：**扫描会读取淘宝订单页面，并可能下载发票；如果客服发来发票申请卡片，脚本可能填写并提交申请。它不会发送客服聊天消息。请只处理你有权管理的账号和订单；遇到验证时，在弹出的淘宝浏览器里亲自完成。
+
+## 一、首次使用
+
+### 第 1 步：下载项目
+
+仓库目前是私有的。使用者需要先获得仓库访问权限，然后才能下载。
+
+**下载 ZIP（不需要 Git）：**
+
+1. 在浏览器打开项目的 GitHub 页面。
+2. 点击绿色的 **Code** 按钮，再点 **Download ZIP**。
+3. 等下载完成。浏览器通常会把文件放在“下载 / Downloads”文件夹里。
+
+**克隆仓库：**如果你已经用 GitHub Desktop 或 Git 克隆了仓库，就使用克隆出来的文件夹，不必再下载 ZIP。克隆主要用于之后接收更新或参与开发；只想运行程序时，ZIP 已够用。
+
+### 第 2 步：解压并找到项目文件夹
+
+#### Mac
+
+1. 从 Dock 栏打开 **Finder**（蓝白色笑脸图标）。
+2. 在 Finder 左侧点击 **下载**。
+3. 找到名字类似 `taobao-invoice-workspace-main.zip` 的文件并双击。Mac 会在旁边生成解压后的文件夹。
+4. 双击解压后的 `taobao-invoice-workspace` 或 `taobao-invoice-workspace-main` 文件夹。看到 `README.md`、`Setup.command` 和 `Start.command`，就找对了。
+
+#### Windows
+
+1. 打开 **文件资源管理器**（任务栏上的文件夹图标）。
+2. 左侧点击 **下载**。
+3. 找到项目 ZIP 文件，右键并选择 **全部解压…**，再点击 **解压**。
+4. 打开解压后的 `taobao-invoice-workspace` 或 `taobao-invoice-workspace-main` 文件夹。看到 `README.md`、`Setup.bat` 和 `Start.bat`，就找对了。
+
+### 第 3 步：安装 Node.js
+
+Node.js 是票夹运行网页服务和订单处理脚本所需的运行环境。**普通使用者建议用官网安装包**，不用输入 nvm 命令。
+
+1. 打开 [Node.js 官网下载页](https://nodejs.org/en/download)。
+2. 下载并安装 **Node.js 22.13 或更新版本**。选择适合你电脑的 macOS `.pkg` 安装包或 Windows `.msi` 安装包；如果页面提供 LTS 版本，优先选 LTS。
+3. 按安装程序提示完成安装。通常只需安装一次。
+
+#### 关于 nvm（可选）
+
+nvm 是 Node Version Manager（Node 版本管理器），用来在电脑上安装、切换多个 Node.js 版本。它管理的是 Node.js，本身不是票夹，也不会替代项目的 Setup 步骤。
+
+你贴出的 `curl ... | bash`、`nvm install 26` 是偏开发者的终端安装方式：安装 nvm 后，再用它安装 Node 26。项目要求 Node.js 22.13 或更新版本；Node 26 满足这个最低版本要求，但普通使用者不需要特意安装 26。Mac 新手用官网安装包更直接。`nvm-sh` 官方版本面向 macOS/Linux shell；Windows 原生系统需要使用不同的工具 nvm-windows，不能照抄这组命令。
+
+### 第 4 步：运行首次设置
+
+首次设置会下载项目依赖和 Playwright 使用的 Chromium 浏览器。网络较慢时可能需要等待几分钟；设置成功后，不用每次重复。
+
+#### Mac：双击方式
+
+1. 在项目文件夹最外层找到 `Setup.command`。
+2. 双击它。终端窗口会打开并显示安装进度。
+3. 看到 `Setup complete` 后，按提示按回车关闭窗口。
+4. 如果 macOS 提示无法确认开发者：在 Finder 中按住 Control 并点击 `Setup.command`，选择 **打开**，再按屏幕提示确认。只对你从项目 GitHub 仓库下载的文件这样操作。
+
+#### Windows：双击方式
+
+1. 在项目文件夹最外层找到 `Setup.bat`。
+2. 双击它。黑色命令窗口会显示安装进度。
+3. 看到 `Setup complete` 后，按回车关闭窗口。
+
+### 第 5 步：填写自己的发票信息
+
+首次设置会从样例创建 `engine/invoice-config.json`。这是你本机的配置文件：
+
+- **Mac：**在项目文件夹中依次打开 `engine` 文件夹，再用文本编辑器（如 TextEdit）打开 `invoice-config.json`。
+- **Windows：**在项目文件夹中依次打开 `engine` 文件夹，右键 `invoice-config.json`，选择用记事本打开。
+
+按文件示例填写自己的发票抬头、税号和接收邮箱，保存文件。JSON 的双引号、逗号和大括号要保留；不要把真实配置发给别人或提交到 GitHub。系统运行时会使用这份配置。
+
+如果没有看到 `invoice-config.json`，先确认 `Setup` 已成功完成；不要把 `invoice-config.example.json` 直接改成自己的真实配置后提交到仓库。
+
+### 第 6 步：启动票夹并登录淘宝
+
+1. 回到项目文件夹最外层。
+2. Mac 双击 `Start.command`；Windows 双击 `Start.bat`。
+3. 保持打开的终端/命令窗口运行。浏览器访问 <http://127.0.0.1:4318>。
+4. 在票夹中创建或打开 Event。扫描时按提示在弹出的淘宝浏览器里登录并完成人工安全验证。
+
+扫描过程中不要关闭启动窗口或让电脑进入睡眠。结果会在任务记录和 Event 订单表中逐步更新。
+
+## 二、后续使用
+
+Node.js、依赖、Chromium 和发票配置通常只需首次设置。以后每次用票夹时：
+
+### 方式 A：点击文件启动
+
+1. 在 Finder（Mac）或文件资源管理器（Windows）中找到之前解压/克隆的 `taobao-invoice-workspace` 项目文件夹。
+2. 打开文件夹最外层。
+3. Mac 双击 `Start.command`；Windows 双击 `Start.bat`。
+4. 保持启动窗口打开，再访问 <http://127.0.0.1:4318>。
+
+你可以在桌面为项目文件夹创建快捷方式/别名，之后更容易找到它。不要移动或单独复制 `Start` 文件；它需要和项目里的其他文件放在原位置。
+
+### 方式 B：用终端启动
+
+终端命令适合想直接输入指令的使用者。先让终端进入项目文件夹，再运行启动脚本。
+
+#### Mac
+
+1. 打开 **终端 Terminal**（Finder → 应用程序 → 实用工具 → 终端）。
+2. 输入 `cd `（注意 `cd` 后面有一个空格，不要按回车）。
+3. 把 `taobao-invoice-workspace` 项目文件夹从 Finder 拖到终端窗口，终端会自动填入文件夹路径。
+4. 按回车，然后输入：
+
+   ```bash
+   ./Start.command
+   ```
+
+5. 按回车启动。保持这个终端窗口打开。
+
+如果你确定文件夹在“下载”里，也可以直接输入：
+
+```bash
+cd ~/Downloads/taobao-invoice-workspace
+./Start.command
+```
+
+如果文件夹名称带有 `-main`，或者放在别处，用拖放文件夹的方法最稳妥。
+
+#### Windows
+
+1. 在文件资源管理器中打开项目文件夹最外层。
+2. 点击窗口顶部的地址栏，输入 `cmd`，再按回车。这会在当前项目文件夹打开命令窗口。
+3. 输入并回车：
+
+   ```bat
+   Start.bat
+   ```
+
+也可以在 PowerShell 窗口中运行：
+
+```powershell
+cd "$HOME\Downloads\taobao-invoice-workspace"
+.\Start.bat
+```
+
+如果实际文件夹名称或位置不同，请改成实际路径；也可以用地址栏输入 `powershell`，这样会直接在当前文件夹打开 PowerShell。
+
+### 停止服务
+
+在启动票夹的终端/命令窗口按 **Ctrl+C**，再按提示确认（如果出现）。停止服务会中断正在运行的任务。重新启动或重扫前，先查看淘宝页面、任务记录和订单状态，避免重复提交申请。
+
+## 三、常见问题
+
+- **网页显示无法访问：**确认 `Start.command` / `Start.bat` 启动窗口仍打开且没有报错，再刷新 <http://127.0.0.1:4318>。
+- **提示找不到 Node.js 或版本太旧：**重新安装 Node.js 22.13 或更新版本，关闭并重开终端，再运行 Setup。
+- **Setup 下载很慢：**首次 Setup 需要从网络下载依赖和 Chromium。保持窗口打开并等待；若失败，记录最后几行错误信息后再处理。
+- **误关了启动窗口：**服务已经停止。重新双击 `Start` 文件即可；如果扫描被中断，先核对淘宝上的真实状态。
+- **找不到配置文件：**确认在项目目录内打开 `engine` 子文件夹，并且 Setup 已成功运行。
+- **订单、发票是否会自动同步给别人：**不会。程序数据和登录会话留在各自电脑。
+
+## 四、重要数据与隐私
+
+Event 数据、发票、快照、任务文件、`engine/invoice-config.json` 和 Playwright 浏览器登录状态都保存在本机。不要分享 `ui/.data/`、`engine/downloads/`、配置文件或 `engine/.playwright-browser/`。GitHub 仓库只用于下载程序，不是云端票务库。
