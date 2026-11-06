@@ -16,8 +16,8 @@ Complete Taobao sign-in and verification yourself in the local browser window. D
 
 ## 2. Create an Event and scan
 
-1. Create an Event and enter its name and purchase date range.
-2. Open the Event, confirm the date range, and select **Scan orders**.
+1. Create an Event, enter its name, and add one or more purchase-date ranges. Each row has a start and end date; for a single day, set both to the same date. For example, add Oct 20–24, Oct 28, and Oct 30–31 as three ranges.
+2. Open the Event, confirm the date ranges, and select **Scan orders**. Scanning checks orders in the selected ranges and also includes manually added orders in this Event, regardless of their dates.
 3. Watch the Taobao browser and complete sign-in or security checks when prompted.
 4. Follow progress in Task history. Review each order's status, amount, and note in the order table.
 
