@@ -69,14 +69,38 @@ nvm 是 Node Version Manager（Node 版本管理器），用来在电脑上安�
 
 ### 第 5 步：填写自己的发票信息
 
-首次设置会从样例创建 `engine/invoice-config.json`。这是你本机的配置文件：
+首次设置会自动把样例复制成 `engine/invoice-config.json`。**这里不是网页表单**，而是要用文本编辑器修改的本地 JSON 文件。它在项目文件夹中的位置是：
+
+```text
+taobao-invoice-workspace/
+└── engine/
+    └── invoice-config.json
+```
 
 - **Mac：**在项目文件夹中依次打开 `engine` 文件夹，再用文本编辑器（如 TextEdit）打开 `invoice-config.json`。
 - **Windows：**在项目文件夹中依次打开 `engine` 文件夹，右键 `invoice-config.json`，选择用记事本打开。
 
-按文件示例填写自己的发票抬头、税号和接收邮箱，保存文件。JSON 的双引号、逗号和大括号要保留；不要把真实配置发给别人或提交到 GitHub。系统运行时会使用这份配置。
+打开后会看到类似下面的内容。只把前三项示例文字替换成你自己的发票抬头、税号和接收邮箱；其他信息暂时没有的话保留空字符串即可：
 
-如果没有看到 `invoice-config.json`，先确认 `Setup` 已成功完成；不要把 `invoice-config.example.json` 直接改成自己的真实配置后提交到仓库。
+```json
+{
+  "companyName": "你的发票抬头",
+  "taxNo": "你的纳税人识别号",
+  "email": "接收发票的邮箱",
+  "phone": "",
+  "address": "",
+  "bankName": "",
+  "bankAccount": "",
+  "paperShippingName": "",
+  "paperShippingPhone": "",
+  "paperShippingAddress": "",
+  "sellerMessageTemplate": "您好，这笔订单需要申请开具发票。订单号：{orderId}。烦请协助开具发票。发票信息如下：发票抬头：{companyName}；税号：{taxNo}；发票类型：{invoiceType}；接收邮箱：{email}。如需补充信息，请告知，谢谢。"
+}
+```
+
+请只改引号里面的文字，不要删掉双引号、逗号或大括号。保存文件后就完成配置；启动票夹时会读取这份配置。不要把真实配置发给别人或提交到 GitHub。
+
+如果没有看到 `invoice-config.json`，先确认 `Setup` 已成功完成。`invoice-config.example.json` 是仓库里的样例文件；填写个人信息应放在旁边生成的 `invoice-config.json`，不要覆盖样例或把真实配置提交到仓库。
 
 ### 第 6 步：启动票夹并登录淘宝
 
