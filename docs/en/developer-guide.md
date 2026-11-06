@@ -45,6 +45,8 @@ Before changing live Taobao behavior, review action branches, confirmation point
 
 The root README links to Chinese and English user/developer guides. The UI is Chinese-only in the first release. When behavior changes, update both languages consistently, especially seller-card submission, file retention, and permission details.
 
+The order workspace filters statuses with five color buttons. Keep their CSS colors shared with the status-label variables. The Invoice Library is no longer a separate navigation item or page; users open files from order rows and order details. The order-table coverage notice must state that completeness is unknown and direct users to verify the count and add missing orders manually.
+
 ## Release process
 
 1. Include only source code, setup/start scripts, sample config, documentation, and necessary licenses.
