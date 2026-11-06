@@ -109,6 +109,8 @@ If `invoice-config.json` is missing, confirm Setup completed successfully. `invo
 3. Keep the Terminal/command window open. Visit <http://127.0.0.1:4318> in a browser.
 4. Create or open an Event. When scanning, sign in to Taobao and complete any security checks in the Taobao browser window.
 
+When creating an Event, you can add multiple purchase-date ranges, such as Oct 20–24, Oct 28, and Oct 30–31. Add each range on its own row; for a single day, use the same start and end date. Scanning checks orders in the selected ranges and also includes manually added orders in that Event, regardless of their dates.
+
 Do not close the startup window or let the computer sleep during a scan. Progress appears in Task history and updates in the Event order table.
 
 ## 2. Everyday use
