@@ -18,7 +18,9 @@ const port=Number(process.env.INVOICE_UI_PORT||4318), origin=`http://127.0.0.1:$
 if(!Number.isInteger(port)||port<1||port>65535) throw Error('端口无效');
 const tasks=new Map(); let active=null;
 const stateFile=join(data,'events.json');
-async function readState(){try{return JSON.parse(await readFile(stateFile,'utf8'))}catch(e){if(e.code==='ENOENT')return {events:[]};throw e}}
+async function readState(){try{const state=JSON.parse(await readFile(stateFile,'utf8'));state.revision=Number.isSafeInteger(state.revision)?state.revision:0;return state}catch(e){if(e.code==='ENOENT')return {events:[],revision:0};throw e}}
+let stateWriteQueue=Promise.resolve();
+async function compareAndWriteState(value){let release;const previous=stateWriteQueue;stateWriteQueue=new Promise(resolve=>{release=resolve});await previous;try{const current=await readState(),revision=Number.isSafeInteger(current.revision)?current.revision:0;if(!Number.isSafeInteger(value.revision)||value.revision!==revision)return {conflict:true,revision};const next={...value,revision:revision+1};await writeFile(stateFile,JSON.stringify(next),{mode:0o600});return {ok:true,revision:next.revision}}finally{release()}}
 function send(res,code,value,type='application/json; charset=utf-8'){res.writeHead(code,{'Content-Type':type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'",'Referrer-Policy':'no-referrer'});res.end(type.startsWith('application/json')?JSON.stringify(value):value)}
 async function json(req){let chunks=[],size=0;for await(const c of req){size+=c.length;if(size>100000)throw Error('请求过大');chunks.push(c)}return JSON.parse(Buffer.concat(chunks).toString()||'{}')}
 const date=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&!Number.isNaN(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;
@@ -64,7 +66,7 @@ const server=http.createServer(async(req,res)=>{try{
   if(req.headers.origin&&req.headers.origin!==origin)return send(res,403,{error:'来源不允许'});
   if(req.method!=='GET'&&(req.headers.origin!==origin||req.headers['x-invoice-request']!=='local-app'))return send(res,403,{error:'来源不允许'});
   if(p==='/api/state'&&req.method==='GET')return send(res,200,await readState());
-  if(p==='/api/state'&&req.method==='PUT'){let v=await json(req);if(!Array.isArray(v.events)||v.events.length>500)throw Error('数据格式错误');await writeFile(stateFile,JSON.stringify(v),{mode:0o600});return send(res,200,{ok:true})}
+  if(p==='/api/state'&&req.method==='PUT'){let v=await json(req);if(!Array.isArray(v.events)||v.events.length>500)throw Error('数据格式错误');const result=await compareAndWriteState(v);if(result.conflict)return send(res,409,{error:'订单数据已在其他页面更新；请刷新后再保存',revision:result.revision});return send(res,200,result)}
   if(p==='/api/config'&&req.method==='GET'){let c=JSON.parse(await readFile(join(helper,'invoice-config.json'),'utf8'));return send(res,200,{companyName:c.companyName||'',taxNo:c.taxNo||'',email:c.email||''})}
   if(p==='/api/exports/invoices'&&req.method==='POST'){
    const v=await json(req),state=await readState(),ev=state.events.find(e=>e.id===v.eventId);

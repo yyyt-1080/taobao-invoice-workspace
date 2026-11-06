@@ -10,6 +10,8 @@
 - `engine/invoice-config.json`：用户本机开票配置。
 - `engine/.playwright-browser/`、`engine/downloads/`、`engine/snapshots/`：本机登录会话和运行文件。
 
+Event 状态保存使用递增的 `revision` 做乐观并发校验，并串行写入。客户端提交的版本落后时，服务端返回 `409`，前端重新载入最新状态，避免旧标签页整份覆盖较新的订单编辑。该机制保护同一本机应用中的并发写入，不提供多人协作或跨设备同步。
+
 根目录 `package.json` 管理共享依赖；`ui/server.mjs` 默认调用相邻的 `engine/`，也可以通过 `INVOICE_HELPER_DIR` 指向开发用 Helper 目录。服务绑定 `127.0.0.1`，没有认证或多人隔离，不可直接开放到局域网或公网。
 
 ## 环境与命令

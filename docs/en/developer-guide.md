@@ -10,6 +10,8 @@
 - `engine/invoice-config.json`: each user's local invoice configuration.
 - `engine/.playwright-browser/`, `engine/downloads/`, `engine/snapshots/`: local login state and runtime files.
 
+Event state writes use an incrementing `revision` for optimistic concurrency checks and are serialized. If a client submits a stale revision, the server returns `409` and the UI reloads the latest state instead of letting an older tab overwrite newer order edits. This protects concurrent writes to one local app; it does not provide multi-user collaboration or cross-device sync.
+
 The root `package.json` manages shared dependencies. `ui/server.mjs` calls the sibling `engine/` directory by default; `INVOICE_HELPER_DIR` can point to a development helper. The service binds to `127.0.0.1`. It has no authentication or multi-user isolation and must not be exposed to a LAN or the public internet.
 
 ## Requirements and commands
