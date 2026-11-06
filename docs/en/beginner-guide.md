@@ -69,14 +69,38 @@ Setup downloads project dependencies and the Chromium browser used by Playwright
 
 ### Step 5: Enter your invoice details
 
-First-time setup creates `engine/invoice-config.json` from the example file. This is your local configuration:
+First-time setup automatically copies the example to `engine/invoice-config.json`. **This is not a form on the website**; edit this local JSON file with a text editor. Its location is:
+
+```text
+taobao-invoice-workspace/
+└── engine/
+    └── invoice-config.json
+```
 
 - **macOS:** Open the project's `engine` folder, then open `invoice-config.json` with a text editor such as TextEdit.
 - **Windows:** Open the project's `engine` folder, right-click `invoice-config.json`, and choose Notepad.
 
-Fill in your own invoice title, tax number, and receiving email, then save the file. Keep the JSON quotation marks, commas, and braces. Do not share this real configuration or commit it to GitHub. The app uses this file when running.
+The file will look similar to the example below. Replace the example text in the first three fields with your invoice title, tax number, and receiving email. Leave the other fields as empty strings if you do not need them yet:
 
-If `invoice-config.json` is missing, confirm that Setup completed successfully. Do not put real information into the tracked example and commit it to the repository.
+```json
+{
+  "companyName": "Your invoice title",
+  "taxNo": "Your taxpayer identification number",
+  "email": "Email address for receiving invoices",
+  "phone": "",
+  "address": "",
+  "bankName": "",
+  "bankAccount": "",
+  "paperShippingName": "",
+  "paperShippingPhone": "",
+  "paperShippingAddress": "",
+  "sellerMessageTemplate": "您好，这笔订单需要申请开具发票。订单号：{orderId}。烦请协助开具发票。发票信息如下：发票抬头：{companyName}；税号：{taxNo}；发票类型：{invoiceType}；接收邮箱：{email}。如需补充信息，请告知，谢谢。"
+}
+```
+
+Replace only the text inside quotation marks. Keep the JSON quotation marks, commas, and braces. Save the file; Piao Jia reads it when it starts. Do not share your real configuration or commit it to GitHub.
+
+If `invoice-config.json` is missing, confirm Setup completed successfully. `invoice-config.example.json` is the sample tracked in the repository; enter personal information in the generated `invoice-config.json` beside it. Do not overwrite the sample or commit real configuration to the repository.
 
 ### Step 6: Start Piao Jia and sign in to Taobao
 
