@@ -9,8 +9,8 @@ Piao Jia is a local workspace for organizing Taobao invoices. The web UI manages
 ## Quick start
 
 1. Install [Node.js 22.13 or newer](https://nodejs.org/).
-2. Download this repository and double-click `Setup.command` (macOS) or `Setup.bat` (Windows).
-3. Edit the generated `engine/invoice-config.json` with your own invoice details.
+2. Download and unzip this repository, then double-click `Setup.command` (macOS) or `Setup.bat` (Windows).
+3. Setup creates `engine/invoice-config.json` only after it succeeds. It is normal for this file to be missing immediately after cloning or unzipping. Open it and enter your invoice details.
 4. Double-click `Start.command` (macOS) or `Start.bat` (Windows), then open <http://127.0.0.1:4318>.
 5. Complete Taobao sign-in and security checks manually in the local browser window.
 
