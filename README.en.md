@@ -4,7 +4,7 @@
 
 Piao Jia is a local workspace for organizing Taobao invoices. The web UI manages orders and attachments by Event; the included helper automates supported Taobao page workflows. It supports **macOS and Windows**. Each user signs in and keeps their own data on their own computer. This is not a shared cloud service.
 
-> **Scanning can perform real actions.** Scanning and checking one order may fill in and submit an invoice application card sent by a seller. The app does not send chat messages. Applications through the normal system entry require confirmation in the UI. Read the [User Guide](docs/en/user-guide.md) before scanning.
+> **Scanning can perform real actions.** Scanning and checking one order may fill in and submit an invoice application card sent by a seller. The app does not send chat messages. Applications through the normal system entry require confirmation in the UI. Read the [Beginner Guide](docs/en/beginner-guide.md) before scanning.
 
 ## Quick start
 
@@ -14,11 +14,12 @@ Piao Jia is a local workspace for organizing Taobao invoices. The web UI manages
 4. Double-click `Start.command` (macOS) or `Start.bat` (Windows), then open <http://127.0.0.1:4318>.
 5. Complete Taobao sign-in and security checks manually in the local browser window.
 
-See the [English User Guide](docs/en/user-guide.md) or [中文使用指南](docs/zh-CN/user-guide.md) for details.
+See the [English Beginner Guide](docs/en/beginner-guide.md) or [中文新手指南](docs/zh-CN/beginner-guide.md) for details.
 
 ## Documentation
 
-- [User Guide (English)](docs/en/user-guide.md) · [普通使用指南（中文）](docs/zh-CN/user-guide.md)
+- [Beginner Guide (English)](docs/en/beginner-guide.md) · [新手指南（中文）](docs/zh-CN/beginner-guide.md)
+- [Detailed User Guide (English)](docs/en/user-guide.md) · [详细使用指南（中文）](docs/zh-CN/user-guide.md)
 - [Developer Guide (English)](docs/en/developer-guide.md) · [开发指南（中文）](docs/zh-CN/developer-guide.md)
 
 ## Privacy and data
