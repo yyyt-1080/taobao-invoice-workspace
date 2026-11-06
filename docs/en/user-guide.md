@@ -35,6 +35,10 @@ Use the system only for accounts and orders you are authorized to manage. If a r
 
 Open **Details** to view a PDF or image. The order row shows **View invoice ↗** only when its status includes **Issued** and an attachment is linked.
 
+Five solid color filters appear above the order search box: red for **Needs review**, purple for **Manually added**, blue for **Seller pending**, yellow for **System pending**, and green for **Issued**. Their colors match the status labels. Select the active color again to clear the filter. Open invoice files from that order's **View invoice ↗** link or **Details**; there is no separate Invoice Library page.
+
+If the order table says **Coverage is unknown; manually check the order count and add missing orders if needed**, the scan may not have covered every Taobao order. Check the count and add missing orders manually.
+
 ## 4. Edit, upload, and reconcile
 
 1. Select **Edit orders** to change status, note, amount, and the **Export** checkbox.
