@@ -1,3 +1,32 @@
 # 票夹 · Taobao Invoice Workspace
 
-请稍候，正在发布项目文件。
+[简体中文](README.md) · [English](README.en.md)
+
+票夹是运行在个人电脑上的淘宝发票工作台。网页界面按 Event 管理订单和附件；订单扫描与淘宝页面操作由随项目提供的 Helper 执行。支持 **macOS 和 Windows**，每位使用者各自在本机登录并保存自己的数据。它不是云端共享服务。
+
+> **扫描会产生真实操作。**扫描及单笔“检查此订单”可能填写并提交商家发来的发票申请卡片，但不会发送客服聊天消息。系统申请入口的申请需通过界面确认。开始前请阅读[普通使用指南](docs/zh-CN/user-guide.md)。
+
+## 快速开始
+
+1. 安装 [Node.js 22.13 或更新版本](https://nodejs.org/)。
+2. 下载本仓库，双击 `Setup.command`（macOS）或 `Setup.bat`（Windows）。
+3. 编辑生成的 `engine/invoice-config.json`，填写自己的发票信息。
+4. 双击 `Start.command`（macOS）或 `Start.bat`（Windows），然后打开 <http://127.0.0.1:4318>。
+5. 淘宝登录和安全验证在弹出的本地浏览器中手动完成。
+
+详细步骤见[中文使用指南](docs/zh-CN/user-guide.md)或[English User Guide](docs/en/user-guide.md)。
+
+## 文档
+
+- [普通使用指南（中文）](docs/zh-CN/user-guide.md) · [English User Guide](docs/en/user-guide.md)
+- [开发指南（中文）](docs/zh-CN/developer-guide.md) · [English Developer Guide](docs/en/developer-guide.md)
+
+## 隐私与数据
+
+Event 数据、配置、浏览器登录会话、发票、快照和任务文件保存在使用者自己的电脑中，不会随 GitHub 下载或上传。不要把这些本地数据提交到仓库。仓库仅分发代码，不提供账号、淘宝授权或多人数据同步。
+
+## 项目状态
+
+本项目用于本地自动化和个人资料整理。淘宝页面结构可能改变，识别结果需人工核对。扫描范围、发票金额匹配和 PDF 文件本身都不能证明发票真伪或完整性。使用前请确认平台规则及账号所有者授权。
+
+[简体中文](README.md) · [English](README.en.md)

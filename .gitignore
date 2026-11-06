@@ -1,0 +1,38 @@
+# Local configuration and private business data
+engine/invoice-config.json
+engine/.playwright-browser/
+engine/downloads/
+engine/snapshots/
+engine/*progress*.json
+engine/ui-task-*.json
+engine/ui-task-*.csv
+engine/invoice-action*.json
+engine/invoice-action*.csv
+engine/contacted-orders*.json
+engine/downloaded-invoices*.json
+engine/modified-orders*.json
+engine/seller-chat-replies*.json
+ui/.data/
+
+# Local installs and generated files
+node_modules/
+**/node_modules/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+.env
+.env.*
+!*.example
+
+# Helper-generated order and task records
+engine/*.json
+!engine/invoice-config.example.json
+engine/*.csv
+engine/*.html
+engine/*.png
+engine/*.jpg
+engine/*.jpeg
+engine/*.pdf
+engine/*.zip
+engine/*.tmp

@@ -1,0 +1,8 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,writeFile,symlink,rm} from 'node:fs/promises';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {readInvoicePdf,invoiceFileFromResult,readInvoiceQr,qrFileFromResult} from '../pdf-store.mjs';
+test('only readable PDFs within the download directory are accepted',async()=>{const dir=await mkdtemp(join(tmpdir(),'invoice-pdf-'));try{await writeFile(join(dir,'a.pdf'),'%PDF-1.4\nexample');await writeFile(join(dir,'fake.pdf'),'not a pdf');await symlink('/etc/passwd',join(dir,'escape.pdf'));assert.match((await readInvoicePdf(dir,'a.pdf')).toString(),/^%PDF-/);await assert.rejects(readInvoicePdf(dir,'../a.pdf'));await assert.rejects(readInvoicePdf(dir,'fake.pdf'));await assert.rejects(readInvoicePdf(dir,'escape.pdf'));assert.equal((await invoiceFileFromResult(dir,{execution:{status:'downloaded',downloadResult:{path:join(dir,'a.pdf')}}})).name,'a.pdf');assert.equal(await invoiceFileFromResult(dir,{execution:{status:'downloaded',downloadResult:{path:'/etc/passwd'}}}),null)}finally{await rm(dir,{recursive:true,force:true})}});
+test('QR images must be PNG files inside the QR directory',async()=>{const dir=await mkdtemp(join(tmpdir(),'invoice-qr-'));try{const name='12345678-123.png',file=join(dir,name);await writeFile(file,Buffer.from('89504e470d0a1a0a01','hex'));assert.equal((await readInvoiceQr(dir,name)).length,9);assert.equal((await qrFileFromResult(dir,{execution:{status:'qr_received',qrPath:file}})).name,name);await assert.rejects(readInvoiceQr(dir,'../outside.png'));await writeFile(join(dir,'12345678-456.png'),'not png');await assert.rejects(readInvoiceQr(dir,'12345678-456.png'));}finally{await rm(dir,{recursive:true,force:true})}});
