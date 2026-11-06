@@ -4,7 +4,7 @@
 
 票夹是运行在个人电脑上的淘宝发票工作台。网页界面按 Event 管理订单和附件；订单扫描与淘宝页面操作由随项目提供的 Helper 执行。支持 **macOS 和 Windows**，每位使用者各自在本机登录并保存自己的数据。它不是云端共享服务。
 
-> **扫描会产生真实操作。**扫描及单笔“检查此订单”可能填写并提交商家发来的发票申请卡片，但不会发送客服聊天消息。系统申请入口的申请需通过界面确认。开始前请阅读[普通使用指南](docs/zh-CN/user-guide.md)。
+> **扫描会产生真实操作。**扫描及单笔“检查此订单”可能填写并提交商家发来的发票申请卡片，但不会发送客服聊天消息。系统申请入口的申请需通过界面确认。开始前请阅读[新手指南](docs/zh-CN/beginner-guide.md)。
 
 ## 快速开始
 
@@ -14,11 +14,12 @@
 4. 双击 `Start.command`（macOS）或 `Start.bat`（Windows），然后打开 <http://127.0.0.1:4318>。
 5. 淘宝登录和安全验证在弹出的本地浏览器中手动完成。
 
-详细步骤见[中文使用指南](docs/zh-CN/user-guide.md)或[English User Guide](docs/en/user-guide.md)。
+详细步骤见[中文新手指南](docs/zh-CN/beginner-guide.md)或[English Beginner Guide](docs/en/beginner-guide.md)。
 
 ## 文档
 
-- [普通使用指南（中文）](docs/zh-CN/user-guide.md) · [English User Guide](docs/en/user-guide.md)
+- [新手指南（中文）](docs/zh-CN/beginner-guide.md) · [English Beginner Guide](docs/en/beginner-guide.md)
+- [详细使用指南（中文）](docs/zh-CN/user-guide.md) · [Detailed User Guide](docs/en/user-guide.md)
 - [开发指南（中文）](docs/zh-CN/developer-guide.md) · [English Developer Guide](docs/en/developer-guide.md)
 
 ## 隐私与数据
