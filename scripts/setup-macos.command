@@ -12,5 +12,5 @@ npm ci
 npx playwright install chromium
 if [ ! -f engine/invoice-config.json ]; then cp engine/invoice-config.example.json engine/invoice-config.json; fi
 echo
-echo "Setup complete. Edit engine/invoice-config.json, then double-click Start.command."
+echo "Setup complete. Double-click Start.command, open http://127.0.0.1:4318, then enter your details under “开票资料”."
 read -r -p "Press Return to close..." _
