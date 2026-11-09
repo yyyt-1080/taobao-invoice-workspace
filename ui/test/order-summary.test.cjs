@@ -15,12 +15,12 @@ test('header uses displayed tag colors and exact note text',()=>{
  const {summarizeOrderHeader}=require('../public/order-summary');
  const tags=o=>o.tags, color=t=>t==='已开票'?'status-saved':t==='开票中'?'status-pending':'status-review';
  const orders=[{tags:['已开票'],invoice:{name:'a.pdf'}},{tags:['待核对'],reason:'已联系客服，开票中'}, {tags:['开票中'],reason:'页面显示开票中'}, {tags:['开票中'],reason:'申请已提交，页面显示开票中'}, {tags:['待核对'],reason:'已联系客服'}, {tags:['开票中'],reason:'等待回复'},{tags:['已开票','需人工核对'],reason:'已联系客服，开票中'}];
- assert.deepEqual(summarizeOrderHeader(orders,tags,color),{total:7,issued:2,savedPdf:1,systemPending:2,sellerPending:1,review:2});
+ assert.deepEqual(summarizeOrderHeader(orders,tags,color),{total:7,issued:2,savedPdf:1,systemPending:2,sellerPending:1,review:2,submitted:0});
 });
 
 test('issued status requires a linked invoice',()=>{assert.equal(isIssued({statusTags:['已开票']}),false);assert.equal(isIssued({statusTags:['已开票'],invoice:{name:'a.pdf'}}),true)});
 
-test('selected system and seller statuses determine header counts regardless of notes',()=>{const {summarizeOrderHeader}=require('../public/order-summary');const get=o=>o.tags,color=t=>t==='已开票'?'status-saved':t==='系统开票中'?'status-pending':t==='客服开票中'?'status-customer':'status-review';const orders=[{tags:['系统开票中']},{tags:['客服开票中']},{tags:['待人工确认']},{tags:['已开票'],invoice:{name:'a.pdf'}}];assert.deepEqual(summarizeOrderHeader(orders,get,color),{total:4,issued:1,savedPdf:1,systemPending:1,sellerPending:1,review:1})});
+test('selected system and seller statuses determine header counts regardless of notes',()=>{const {summarizeOrderHeader}=require('../public/order-summary');const get=o=>o.tags,color=t=>t==='已开票'?'status-saved':t==='系统开票中'?'status-pending':t==='客服开票中'?'status-customer':'status-review';const orders=[{tags:['系统开票中']},{tags:['客服开票中']},{tags:['待人工确认']},{tags:['已开票'],invoice:{name:'a.pdf'}}];assert.deepEqual(summarizeOrderHeader(orders,get,color),{total:4,issued:1,savedPdf:1,systemPending:1,sellerPending:1,review:1,submitted:0})});
 test('only a linked invoice marked issued is treated as issued',()=>{
  assert.equal(isIssued({invoice:{name:'x.pdf'},statusTags:['待人工确认']}),false);
  assert.equal(isIssued({invoice:{name:'x.pdf'},statusTags:['系统开票中']}),false);
