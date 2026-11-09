@@ -9,5 +9,5 @@ npm ci
 npx playwright install chromium
 $Config = Join-Path $Root 'engine/invoice-config.json'
 if (-not (Test-Path $Config)) { Copy-Item (Join-Path $Root 'engine/invoice-config.example.json') $Config }
-Write-Host "Setup complete. Edit engine/invoice-config.json, then run Start.bat."
+Write-Host "Setup complete. Run Start.bat, open http://127.0.0.1:4318, then enter your details under “开票资料”."
 Read-Host 'Press Enter to close'
