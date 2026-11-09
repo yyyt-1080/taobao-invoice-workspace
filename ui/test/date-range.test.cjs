@@ -10,8 +10,8 @@ test('validates real calendar dates and inclusive range ordering',()=>{
 });
 test('saved Event range takes priority; legacy Events use latest valid scan',()=>{
  const e={range:{start:'2026-10-25',end:'2026-10-26'},scans:[{start:'2026-01-01',end:'2026-01-02'}]};
- assert.deepEqual(resolveRange(e),{start:'2026-10-25',end:'2026-10-26',source:'event'});
+ assert.deepEqual(resolveRange(e),{start:'2026-10-25',end:'2026-10-26',ranges:[{start:'2026-10-25',end:'2026-10-26'}],source:'event'});
  delete e.range;e.scans.push({start:'',end:''});
- assert.deepEqual(resolveRange(e),{start:'2026-01-01',end:'2026-01-02',source:'previous_scan'});
+ assert.deepEqual(resolveRange(e),{start:'2026-01-01',end:'2026-01-02',ranges:[{start:'2026-01-01',end:'2026-01-02'}],source:'previous_scan'});
  assert.equal(resolveRange({orders:[],scans:[]}),null);
 });
