@@ -8,7 +8,7 @@
 
 ## 快速开始
 
-1. 安装 [Node.js 22.13 或更新版本](https://nodejs.org/)。
+1. 按[新手指南](docs/zh-CN/beginner-guide.md)中的终端命令安装 Node.js 22.13 或更新版本。
 2. 下载并解压本仓库，双击 `Setup.command`（macOS）或 `Setup.bat`（Windows）。
 3. 双击 `Start.command`（macOS）或 `Start.bat`（Windows），然后打开 <http://127.0.0.1:4318>。
 4. 进入左侧“开票资料”，填写并保存发票抬头、税号、邮箱等信息；不需要手动编辑 JSON。
