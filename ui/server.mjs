@@ -14,11 +14,11 @@ import {listenErrorMessages} from './listen-error.mjs';
 import {promisify} from 'node:util';
 const {isIssued,hasInvoiceLink,hasChatImages}=createRequire(import.meta.url)('./public/order-summary.js');
 const EventDates=createRequire(import.meta.url)('./public/date-range.js');
-const {extractPdfText,extractInvoiceTotal}=createRequire(import.meta.url)(join(helper,'pdf-invoice-amount.js'));
 const execFileAsync=promisify(execFile);
 const invoiceConfigKeys=['companyName','taxNo','email','phone','address','bankName','bankAccount','paperShippingName','paperShippingPhone','paperShippingAddress','sellerMessageTemplate'];
 
 const root=resolve(fileURLToPath(new URL('.',import.meta.url))), helper=resolve(process.env.INVOICE_HELPER_DIR||join(root,'../engine')), data=join(root,'.data');
+const {extractPdfText,extractInvoiceTotal}=createRequire(import.meta.url)(join(helper,'pdf-invoice-amount.js'));
 await mkdir(data,{recursive:true,mode:0o700});
 const port=Number(process.env.INVOICE_UI_PORT||4318), origin=`http://127.0.0.1:${port}`;
 if(!Number.isInteger(port)||port<1||port>65535) throw Error('端口无效');
