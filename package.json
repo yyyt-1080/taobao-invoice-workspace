@@ -9,7 +9,8 @@
   },
   "scripts": {
     "start": "node ui/server.mjs",
-    "setup:browser": "playwright install chromium"
+    "setup:browser": "playwright install chromium",
+    "test:ui": "node --test ui/test/*.test.*"
   },
   "dependencies": {
     "pdfjs-dist": "^6.3.289",
