@@ -40,18 +40,47 @@
 
 ### 第 3 步：安装 Node.js
 
-Node.js 是票夹运行网页服务和订单处理脚本所需的运行环境。**普通使用者建议用官网安装包**，不用输入 nvm 命令。
+Node.js 是票夹运行网页服务和订单处理脚本所需的运行环境。项目要求 **Node.js 22.13 或更新版本**。如果 `node -v` 已显示符合要求的版本，跳过安装；否则使用对应系统的终端命令。Node 安装与项目首次 Setup 是两步，都要完成。
 
-1. 打开 [Node.js 官网下载页](https://nodejs.org/en/download)。
-2. 下载并安装 **Node.js 22.13 或更新版本**。选择适合你电脑的 macOS `.pkg` 安装包或 Windows `.msi` 安装包；如果页面提供 LTS 版本，优先选 LTS。
-3. 按安装程序提示完成安装。通常只需安装一次。
+#### Mac：在“终端”安装 Node 22
 
-#### 关于 nvm（可选）
+打开“终端”，整段复制并回车。nvm 会把 Node 安装在当前用户目录，不需要管理员权限：
 
-nvm 是 Node Version Manager（Node 版本管理器），用来在电脑上安装、切换多个 Node.js 版本。它管理的是 Node.js，本身不是票夹，也不会替代项目的 Setup 步骤。
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+nvm install 22
+nvm alias default 22
+node -v
+npm -v
+```
 
-你贴出的 `curl ... | bash`、`nvm install 26` 是偏开发者的终端安装方式：安装 nvm 后，再用它安装 Node 26。项目要求 Node.js 22.13 或更新版本；Node 26 满足这个最低版本要求，但普通使用者不需要特意安装 26。Mac 新手用官网安装包更直接。`nvm-sh` 官方版本面向 macOS/Linux shell；Windows 原生系统需要使用不同的工具 nvm-windows，不能照抄这组命令。
+看到 `node -v` 输出 `v22...` 且版本不低于 `v22.13.0`，即可继续。nvm 通常会在新终端自动加载。如果新开的终端提示 `nvm: command not found`，运行：
 
+```bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+```
+
+#### Windows：在 CMD 安装 Node LTS
+
+打开“命令提示符”（CMD），运行：
+
+```cmd
+winget install --id OpenJS.NodeJS.LTS --exact --source winget
+```
+
+安装完成后关闭 CMD 并重新打开，再运行：
+
+```cmd
+node -v
+npm -v
+```
+
+`--source winget` 可绕过不可用的 Microsoft Store 软件源。如果学校或单位电脑提示需要管理员权限，说明设备策略限制安装，请联系 IT 安装 Node.js。Windows Node ZIP 是免安装包，不会自动配置 PATH，本指南不把它作为常规安装方式。
+
+Node 安装完成后，还要在解压后的项目文件夹运行 `Setup.command`（Mac）或 `Setup.bat`（Windows），以安装票夹依赖和 Chromium。
 ### 第 4 步：运行首次设置
 
 首次设置会下载项目依赖和 Playwright 使用的 Chromium 浏览器。网络较慢时可能需要等待几分钟；设置成功后，不用每次重复。
