@@ -38,18 +38,47 @@ The repository is private. A user needs access to it before downloading.
 
 ### Step 3: Install Node.js
 
-Node.js is the runtime that Piao Jia needs for its local web server and order-processing scripts. **For most users, install it from the official installer; you do not need to type nvm commands.**
+Node.js is the runtime Piao Jia needs for its local web server and order-processing scripts. The project requires **Node.js 22.13 or newer**. If `node -v` already shows a compatible version, skip installation. Otherwise, use the terminal commands for your system. Installing Node and running the project’s first-time Setup are separate steps; both are required.
 
-1. Open the [official Node.js download page](https://nodejs.org/en/download).
-2. Download and install **Node.js 22.13 or newer**. Choose the macOS `.pkg` installer or Windows `.msi` installer that matches your computer. If an LTS release is offered, prefer LTS.
-3. Follow the installer prompts. You normally do this only once.
+#### macOS: install Node 22 in Terminal
 
-#### About nvm (optional)
+Open Terminal, paste the entire block, and press Return. nvm installs Node in your user folder and does not require administrator privileges:
 
-nvm means Node Version Manager. It installs and switches between Node.js versions; it manages Node.js and does not replace Piao Jia's Setup step.
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+nvm install 22
+nvm alias default 22
+node -v
+npm -v
+```
 
-The commands you shared (`curl ... | bash`, `nvm install 26`) are a terminal-based, developer-oriented method: first install nvm, then use it to install Node 26. This project requires Node.js 22.13 or newer; Node 26 meets that minimum, but regular users do not need to choose version 26 specifically. The official installer is simpler for macOS beginners. The original `nvm-sh` project targets macOS/Linux shells. Native Windows needs a different tool, nvm-windows; do not copy those commands into Windows Command Prompt.
+Continue when `node -v` prints `v22...` and the version is at least `v22.13.0`. nvm normally loads automatically in a new Terminal window. If a new window says `nvm: command not found`, run:
 
+```bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+```
+
+#### Windows: install Node LTS in Command Prompt
+
+Open Command Prompt (CMD) and run:
+
+```cmd
+winget install --id OpenJS.NodeJS.LTS --exact --source winget
+```
+
+When installation finishes, close and reopen CMD, then verify:
+
+```cmd
+node -v
+npm -v
+```
+
+The `--source winget` option bypasses the Microsoft Store source if it is unavailable. If a school or work computer says administrator elevation is required, its device policy restricts installation; ask IT to install Node.js. The Windows Node ZIP is a portable archive and does not configure PATH automatically, so this guide does not recommend it as the standard installation method.
+
+After Node is ready, run `Setup.command` (macOS) or `Setup.bat` (Windows) from the extracted project folder. This installs Piao Jia dependencies and Chromium.
 ### Step 4: Run first-time setup
 
 Setup downloads project dependencies and the Chromium browser used by Playwright. The first download may take several minutes on a slow connection. After setup succeeds, you do not repeat it for every scan.
