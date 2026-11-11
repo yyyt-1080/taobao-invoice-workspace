@@ -1,6 +1,6 @@
 import http from 'node:http';
-import {spawn} from 'node:child_process';
-import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {spawn,execFile} from 'node:child_process';
+import {readFile,writeFile,mkdir,rename,unlink} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
@@ -9,8 +9,14 @@ import {readInvoicePdf,invoiceFileFromResult,readInvoiceQr,readOrderImage,qrFile
 import {planRefresh,selectedOrderStage} from './refresh-plan.mjs';
 import {findSavedInvoices} from './saved-invoices.mjs';
 import {createZip} from './zip-archive.mjs';
+import {invoiceProjectName,safeFilenamePart,invoiceAmountLabel} from './invoice-export-name.mjs';
+import {listenErrorMessages} from './listen-error.mjs';
+import {promisify} from 'node:util';
 const {isIssued,hasInvoiceLink,hasChatImages}=createRequire(import.meta.url)('./public/order-summary.js');
 const EventDates=createRequire(import.meta.url)('./public/date-range.js');
+const {extractPdfText,extractInvoiceTotal}=createRequire(import.meta.url)(join(helper,'pdf-invoice-amount.js'));
+const execFileAsync=promisify(execFile);
+const invoiceConfigKeys=['companyName','taxNo','email','phone','address','bankName','bankAccount','paperShippingName','paperShippingPhone','paperShippingAddress','sellerMessageTemplate'];
 
 const root=resolve(fileURLToPath(new URL('.',import.meta.url))), helper=resolve(process.env.INVOICE_HELPER_DIR||join(root,'../engine')), data=join(root,'.data');
 await mkdir(data,{recursive:true,mode:0o700});
@@ -19,6 +25,8 @@ if(!Number.isInteger(port)||port<1||port>65535) throw Error('端口无效');
 const tasks=new Map(); let active=null;
 const stateFile=join(data,'events.json');
 async function readState(){try{const state=JSON.parse(await readFile(stateFile,'utf8'));state.revision=Number.isSafeInteger(state.revision)?state.revision:0;return state}catch(e){if(e.code==='ENOENT')return {events:[],revision:0};throw e}}
+async function readDefaultInvoiceConfig(){try{return JSON.parse(await readFile(join(helper,'invoice-config.json'),'utf8'))}catch(e){if(e.code!=='ENOENT')throw e;const sample=JSON.parse(await readFile(join(helper,'invoice-config.example.json'),'utf8'));for(const [key,value] of Object.entries(sample))if(typeof value==='string'&&value.startsWith('EXAMPLE_'))sample[key]='';return sample}}
+async function eventInvoiceConfig(eventId){const state=await readState(),ev=state.events.find(event=>event.id===eventId);if(!ev)throw Error('Event 不存在');const fallback=await readDefaultInvoiceConfig();return {...fallback,...(ev.invoiceProfile||{})}}
 let stateWriteQueue=Promise.resolve();
 async function compareAndWriteState(value){let release;const previous=stateWriteQueue;stateWriteQueue=new Promise(resolve=>{release=resolve});await previous;try{const current=await readState(),revision=Number.isSafeInteger(current.revision)?current.revision:0;if(!Number.isSafeInteger(value.revision)||value.revision!==revision)return {conflict:true,revision};const next={...value,revision:revision+1};await writeFile(stateFile,JSON.stringify(next),{mode:0o600});return {ok:true,revision:next.revision}}finally{release()}}
 function send(res,code,value,type='application/json; charset=utf-8'){res.writeHead(code,{'Content-Type':type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'",'Referrer-Policy':'no-referrer'});res.end(type.startsWith('application/json')?JSON.stringify(value):value)}
@@ -26,10 +34,24 @@ async function json(req){let chunks=[],size=0;for await(const c of req){size+=c.
 const date=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&!Number.isNaN(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;
 function resultRows(file){return readFile(file,'utf8').then(JSON.parse).then(d=>d.results||[])}
 function summary(r){const status=r.execution?.status||'',validClosed=r.orderMeta?.transactionStatus==='交易关闭'&&r.orderMeta?.closeReason==='超时关闭';return {id:String(r.bizOrderId||''),date:r.orderDate||'',shop:r.shopName||r.orderMeta?.shopName||'',amount:r.orderMeta?.amount||r.amount||'',action:r.actionPlan?.action||'',state:r.state||'',reason:status==='closed_timeout'&&!validClosed?'关闭状态未能确认，请人工核对':r.execution?.reason||r.actionPlan?.reason||'',execution:status==='closed_timeout'&&!validClosed?'manual_required':status,invoiceStatus:r.execution?.invoiceStatus||'',productUrl:r.execution?.productUrl||'',chatUrl:r.execution?.chatUrl||'',reviewUrl:r.execution?.finalUrl||'',url:r.url||'',detailUrl:r.detailUrl||'',platform:r.platform||'',checkedAt:r.checkedAt||''}}
+async function recognizeImageText(file){
+ const options={timeout:90000,maxBuffer:4*1024*1024,encoding:'utf8'};
+ if(process.platform==='darwin')return (await execFileAsync('/usr/bin/swift',[join(root,'ocr-invoice-image.swift'),file],options)).stdout;
+ if(process.platform==='win32'){
+  try{return (await execFileAsync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',join(root,'ocr-invoice-image.ps1'),'-ImagePath',file],options)).stdout}
+  catch{try{return (await execFileAsync('tesseract',[file,'stdout','-l','chi_sim+eng'],options)).stdout}catch{throw Error('图片文字识别失败；请在 Windows 安装中文 OCR 语言包或 Tesseract')}}
+ }
+ try{return (await execFileAsync('tesseract',[file,'stdout','-l','chi_sim+eng'],options)).stdout}catch{throw Error('当前系统没有可用的中文图片 OCR 工具')}
+}
+async function recognizeImageBuffer(buffer,ext){const dir=join(data,'export-ocr');await mkdir(dir,{recursive:true,mode:0o700});const file=join(dir,`${randomUUID()}.${ext}`);try{await writeFile(file,buffer,{flag:'wx',mode:0o600});return await recognizeImageText(file)}finally{await unlink(file).catch(()=>{})}}
 async function runTask(kind,eventId,options){
  if(active)throw Error('已有任务运行中，请先等待或停止');
+ if(!/^[0-9a-f-]{36}$/i.test(eventId))throw Error('Event 编号无效');
+ const config=await eventInvoiceConfig(eventId),configName=`.event-configs/${eventId}.json`;
+ await mkdir(join(helper,'.event-configs'),{recursive:true,mode:0o700});
+ await writeFile(join(helper,configName),JSON.stringify(config,null,2)+'\n',{mode:0o600});
  const id=randomUUID(), prefix=`ui-task-${id}`, output=`${prefix}.json`, progress=`${prefix}-progress.json`;
- const args=['invoice-actions.js','--close-on-finish',`--output=${output}`,`--progress=${progress}`];
+ const args=['invoice-actions.js','--close-on-finish',`--config=${configName}`,`--output=${output}`,`--progress=${progress}`];
  if(options.forceDownloadIds?.length)args.push(`--force-download-ids=${options.forceDownloadIds.join(',')}`);
  if(kind==='scan'){
    args.push('--fresh','--execute','--confirm=YES_EXECUTE_TAOBAO_INVOICE_ACTIONS','--action=refresh','--apply-chat-card',`--start-date=${options.start}`,`--end-date=${options.end}`,'--max-pages=60');
@@ -61,13 +83,19 @@ async function runTask(kind,eventId,options){
 function publicTask(t){if(!t)return null;const {child,...safe}=t;return safe}
 const server=http.createServer(async(req,res)=>{try{
  if(req.headers.host!==`127.0.0.1:${port}`)return send(res,403,{error:'禁止访问'});
- let p=new URL(req.url,origin).pathname;
+ const requestUrl=new URL(req.url,origin);let p=requestUrl.pathname;
  if(p.startsWith('/api/')){
   if(req.headers.origin&&req.headers.origin!==origin)return send(res,403,{error:'来源不允许'});
   if(req.method!=='GET'&&(req.headers.origin!==origin||req.headers['x-invoice-request']!=='local-app'))return send(res,403,{error:'来源不允许'});
   if(p==='/api/state'&&req.method==='GET')return send(res,200,await readState());
   if(p==='/api/state'&&req.method==='PUT'){let v=await json(req);if(!Array.isArray(v.events)||v.events.length>500)throw Error('数据格式错误');const result=await compareAndWriteState(v);if(result.conflict)return send(res,409,{error:'订单数据已在其他页面更新；请刷新后再保存',revision:result.revision});return send(res,200,result)}
-  if(p==='/api/config'&&req.method==='GET'){let c=JSON.parse(await readFile(join(helper,'invoice-config.json'),'utf8'));return send(res,200,{companyName:c.companyName||'',taxNo:c.taxNo||'',email:c.email||''})}
+  if(p==='/api/config'&&req.method==='GET'){const eventId=requestUrl.searchParams.get('eventId');return send(res,200,eventId?await eventInvoiceConfig(eventId):await readDefaultInvoiceConfig())}
+  if(p==='/api/config'&&req.method==='PUT'){
+   const v=await json(req),keys=['companyName','taxNo','email','phone','address','bankName','bankAccount','paperShippingName','paperShippingPhone','paperShippingAddress','sellerMessageTemplate'];
+   if(!keys.every(key=>typeof v[key]==='string')||!v.companyName.trim()||!v.taxNo.trim())throw Error('请填写发票抬头和税号；其他资料可以留空');
+   const config=Object.fromEntries(keys.map(key=>[key,v[key].trim()])),file=join(helper,'invoice-config.json'),temporary=`${file}.${randomUUID()}.tmp`;
+   await writeFile(temporary,JSON.stringify(config,null,2)+'\n',{flag:'wx',mode:0o600});await rename(temporary,file);return send(res,200,{ok:true,config});
+  }
   if(p==='/api/exports/invoices'&&req.method==='POST'){
    const v=await json(req),state=await readState(),ev=state.events.find(e=>e.id===v.eventId);
    if(!ev)throw Error('Event 不存在');if(active?.eventId===ev.id)throw Error('此 Event 有任务运行中，请完成或停止后再导出');
@@ -75,11 +103,11 @@ const server=http.createServer(async(req,res)=>{try{
    const eventName=String(ev.name||'Event').replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_').trim().slice(0,80)||'Event',now=new Date(),datePrefix=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`,folder=`${datePrefix}_${eventName}`,entries=[];
    for(const id of v.orderIds){
     const index=ev.orders.findIndex(order=>order.id===id),order=ev.orders[index];if(!order||!hasInvoiceLink(order))throw Error(`订单 ${id} 没有可导出的发票`);
-    const files=[];if(order.invoice?.name)files.push({ext:'pdf',data:await readInvoicePdf(join(helper,'downloads'),order.invoice.name)});
+    const files=[];if(order.invoice?.name){const data=await readInvoicePdf(join(helper,'downloads'),order.invoice.name);let text='';try{text=await extractPdfText(join(helper,'downloads',order.invoice.name))}catch{}files.push({ext:'pdf',data,text})}
     const images=(order.images||[]).filter(image=>image.source==='manual'||(!image.source&&!hasChatImages(order)));
-    for(const image of images){const ext=image.name.split('.').pop().toLowerCase();files.push({ext,data:await readOrderImage(join(helper,'snapshots','chat-qr'),image.name)});}
+    for(const image of images){const ext=image.name.split('.').pop().toLowerCase(),data=await readOrderImage(join(helper,'snapshots','chat-qr'),image.name);let text='';try{text=await recognizeImageBuffer(data,ext)}catch{}files.push({ext,data,text})}
     if(!files.length)throw Error(`订单 ${id} 的发票文件不存在`);
-    const seq=String(index+1),rawAmount=String(order.amount||'').trim().replace(/^[¥￥]\s*/,'').replace(/,/g,''),amountMatch=/^(\d+)(?:\.(\d{1,2}))?$/.exec(rawAmount),amount=amountMatch?`${amountMatch[1]}.${(amountMatch[2]||'').padEnd(2,'0')}`:'金额未知';for(let i=0;i<files.length;i++){const suffix=files.length===1?'':`_${i+1}`;entries.push({name:`${folder}/${seq}_CNY（${amount}）${suffix}.${files[i].ext}`,data:files[i].data})}
+    const seq=String(index+1);for(let i=0;i<files.length;i++){const project=safeFilenamePart(invoiceProjectName(files[i].text),'NoRead'),amount=safeFilenamePart(invoiceAmountLabel(files[i].text,extractInvoiceTotal),'金额未识别'),suffix=files.length===1?'':`_${i+1}`;entries.push({name:`${folder}/${seq}_${project}_${amount}${suffix}.${files[i].ext}`,data:files[i].data})}
    }
    if(entries.reduce((sum,item)=>sum+item.data.length,0)>500*1024*1024)throw Error('所选发票总大小超过 500 MB，请分批导出');
    const archive=createZip(entries),filename=`${folder}.zip`;
@@ -150,7 +178,7 @@ const server=http.createServer(async(req,res)=>{try{
    }
    if(!['apply','download'].includes(v.kind)||v.confirm!==true)throw Error('操作或确认无效');
    if(active)throw Error('已有任务运行中，请先等待或停止');
-   if(v.kind==='apply'){let c=JSON.parse(await readFile(join(helper,'invoice-config.json'),'utf8'));if(!v.config||['companyName','taxNo','email'].some(k=>(c[k]||'')!==(v.config[k]||'')))throw Error('开票资料已变化，请重新查看并确认');}
+   if(v.kind==='apply'){let c=await eventInvoiceConfig(v.eventId);if(!v.config||invoiceConfigKeys.some(k=>(c[k]||'')!==(v.config[k]||'')))throw Error('此 Event 的开票资料已变化，请重新查看并确认');}
    let order=ev.orders?.find(o=>o.id===v.orderId);if(!order||!/^\d{8,30}$/.test(order.id))throw Error('订单不存在');
    if(v.kind==='apply'&&(order.action!=='apply_invoice'||order.execution))throw Error('订单状态不允许申请，请重新扫描并核对');
    if(v.kind==='apply'&&state.events.some(e=>e.orders?.some(o=>o.id===v.orderId&&o.execution)))throw Error('该订单已有操作记录，请先在淘宝核对，避免重复申请');
@@ -165,5 +193,6 @@ const server=http.createServer(async(req,res)=>{try{
  const files={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/date-range.js':'date-range.js','/order-summary.js':'order-summary.js','/style.css':'style.css'};if(!files[p])return send(res,404,'Not found','text/plain');
  const ext=p.endsWith('.js')?'text/javascript; charset=utf-8':p.endsWith('.css')?'text/css; charset=utf-8':'text/html; charset=utf-8';return send(res,200,await readFile(join(root,'public',files[p])),ext);
  }catch(e){send(res,400,{error:e.message||'操作失败'})}});
+server.on('error',error=>{for(const line of listenErrorMessages(error,port,origin))console.error(line);process.exitCode=1});
 server.listen(port,'127.0.0.1',()=>console.log(`本机票夹：${origin}`));
 process.on('SIGINT',()=>{if(active?.child)active.child.kill('SIGTERM');server.close()});
