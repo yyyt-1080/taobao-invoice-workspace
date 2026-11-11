@@ -16,6 +16,12 @@
 
 详细步骤见[中文新手指南](docs/zh-CN/beginner-guide.md)或[English Beginner Guide](docs/en/beginner-guide.md)。
 
+## 功能概览
+
+- 新建 Event 时使用默认开票资料；需要不同抬头或税号时，可在编辑 Event 中单独设置，该 Event 后续操作使用自己的资料。
+- 导出 ZIP 时尝试从发票 PDF 或图片读取项目名称和票面“价税合计”；多项目发票只用第一条项目明细。文件名格式为 `Event序号_项目名称_票面金额.扩展名`；识别失败时分别使用 `NoRead` 和“金额未识别”，不会用订单金额代替票面金额。
+- 更多功能及操作说明见中英文[详细使用指南](docs/zh-CN/user-guide.md)和[开发指南](docs/zh-CN/developer-guide.md)。
+
 ## 文档
 
 - [新手指南（中文）](docs/zh-CN/beginner-guide.md) · [English Beginner Guide](docs/en/beginner-guide.md)
