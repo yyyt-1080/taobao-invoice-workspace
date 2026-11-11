@@ -1,5 +1,6 @@
 # Local configuration and private business data
 engine/invoice-config.json
+engine/.event-configs/
 engine/.playwright-browser/
 engine/downloads/
 engine/snapshots/
