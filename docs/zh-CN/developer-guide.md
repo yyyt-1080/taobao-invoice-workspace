@@ -8,6 +8,7 @@
 - `engine/`：Playwright 淘宝自动化、订单分类、客服卡片处理和发票金额核对。
 - `ui/.data/events.json`：本地 Event/订单数据。
 - `engine/invoice-config.json`：用户本机开票配置。
+- `engine/.event-configs/<eventId>.json`：服务端按 Event 的默认资料与 Event 覆盖项生成的临时配置；已加入 `.gitignore`，不可提交。
 - `engine/.playwright-browser/`、`engine/downloads/`、`engine/snapshots/`：本机登录会话和运行文件。
 
 Event 状态保存使用递增的 `revision` 做乐观并发校验，并串行写入。客户端提交的版本落后时，服务端返回 `409`，前端重新载入最新状态，避免旧标签页整份覆盖较新的订单编辑。该机制保护同一本机应用中的并发写入，不提供多人协作或跨设备同步。
@@ -23,6 +24,14 @@ Event 状态保存使用递增的 `revision` 做乐观并发校验，并串行�
 - Windows 脚本通过 PowerShell 检查 Node、安装依赖和 Chromium，并只在不存在时从样例创建本机配置。
 
 PDF 金额提取使用 PDF.js 的 Node API，避免依赖 macOS Swift/PDFKit 或外部 `pdftotext`。扫描只使用本机临时/下载目录，不上传 PDF 内容。[PDF.js Node 示例](https://github.com/mozilla/pdf.js/blob/master/examples/node/getinfo.mjs)
+
+## Event 开票资料与 ZIP 文件名
+
+- `ui/public/app.js` 在新建 Event 时把“开票资料”中的默认值填入 Event；用户可在编辑 Event 时单独调整资料。
+- `ui/server.mjs` 将 Event 配置与本机默认配置合并，写入 `engine/.event-configs/`，再用 Helper 的 `--config` 参数执行；申请确认时会重新核对同一份 Event 配置。
+- PDF 文本由 `engine/pdf-invoice-amount.js` 和 PDF.js 提取；PNG/JPG 由 `ui/ocr-invoice-image.swift`（macOS）、`ui/ocr-invoice-image.ps1`（Windows）识别，Windows 可回退到 Tesseract。
+- `ui/invoice-export-name.mjs` 从识别文本提取第一条项目明细及票面“价税合计”。失败时分别用 `NoRead` 和“金额未识别”，不使用订单页面金额。测试覆盖第一条明细选择与端口错误提示。
+- 运行 UI 测试：`npm run test:ui`。
 
 ## 任务流程与副作用
 
