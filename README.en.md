@@ -16,6 +16,12 @@ Piao Jia is a local workspace for organizing Taobao invoices. The web UI manages
 
 See the [English Beginner Guide](docs/en/beginner-guide.md) or [中文新手指南](docs/zh-CN/beginner-guide.md) for details.
 
+## Feature overview
+
+- New Events inherit the default invoice profile. Set a different title or tax number in **Edit Event** when needed; future actions for that Event use its own profile.
+- ZIP export tries to read the project name and invoice total from the PDF or image. For multi-item invoices, it uses only the first detail row. Filenames use `Event sequence_project name_invoice total.ext`; unreadable values use `NoRead` and `AmountUnknown`. The order page amount is never substituted for the invoice amount.
+- See the bilingual [user guides](docs/en/user-guide.md) and [developer guides](docs/en/developer-guide.md) for details.
+
 ## Documentation
 
 - [Beginner Guide (English)](docs/en/beginner-guide.md) · [新手指南（中文）](docs/zh-CN/beginner-guide.md)
