@@ -8,6 +8,7 @@
 - `engine/`: Playwright Taobao automation, order classification, seller-card handling, and invoice amount checking.
 - `ui/.data/events.json`: local Event and order data.
 - `engine/invoice-config.json`: each user's local invoice configuration.
+- `engine/.event-configs/<eventId>.json`: a generated Event-specific config merged from the local default profile; this directory is ignored by Git and must not be committed.
 - `engine/.playwright-browser/`, `engine/downloads/`, `engine/snapshots/`: local login state and runtime files.
 
 Event state writes use an incrementing `revision` for optimistic concurrency checks and are serialized. If a client submits a stale revision, the server returns `409` and the UI reloads the latest state instead of letting an older tab overwrite newer order edits. This protects concurrent writes to one local app; it does not provide multi-user collaboration or cross-device sync.
@@ -23,6 +24,14 @@ The root `package.json` manages shared dependencies. `ui/server.mjs` calls the s
 - The Windows setup script checks Node, installs dependencies and Chromium, and creates the local config from the example only if it does not already exist.
 
 PDF amount extraction uses PDF.js's Node API, avoiding a dependency on macOS Swift/PDFKit or external `pdftotext`. Scans use local temporary/download folders and do not upload PDF content. See the [PDF.js Node example](https://github.com/mozilla/pdf.js/blob/master/examples/node/getinfo.mjs).
+
+## Event profiles and ZIP filenames
+
+- `ui/public/app.js` copies the default **Invoice details** into a new Event. Users can override the profile while editing that Event.
+- `ui/server.mjs` merges the Event profile with local defaults, writes it under `engine/.event-configs/`, and passes it to the Helper with `--config`. Before an application, it checks the same Event profile again.
+- PDF text is extracted with PDF.js through `engine/pdf-invoice-amount.js`. PNG/JPG text uses `ui/ocr-invoice-image.swift` (macOS) or `ui/ocr-invoice-image.ps1` (Windows), with Tesseract as a Windows fallback.
+- `ui/invoice-export-name.mjs` selects the first invoice detail row and the invoice's tax-inclusive total. It uses `NoRead` or `AmountUnknown` when recognition fails; it never substitutes the order page amount. Tests cover first-row selection and startup error messages.
+- Run UI tests with `npm run test:ui`.
 
 ## Task flow and side effects
 
