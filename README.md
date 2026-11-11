@@ -10,8 +10,8 @@
 
 1. 安装 [Node.js 22.13 或更新版本](https://nodejs.org/)。
 2. 下载并解压本仓库，双击 `Setup.command`（macOS）或 `Setup.bat`（Windows）。
-3. Setup 成功后才会在 `engine` 文件夹生成 `invoice-config.json`；克隆/解压后暂时看不到是正常的。打开它填写自己的发票信息。
-4. 双击 `Start.command`（macOS）或 `Start.bat`（Windows），然后打开 <http://127.0.0.1:4318>。
+3. 双击 `Start.command`（macOS）或 `Start.bat`（Windows），然后打开 <http://127.0.0.1:4318>。
+4. 进入左侧“开票资料”，填写并保存发票抬头、税号、邮箱等信息；不需要手动编辑 JSON。
 5. 淘宝登录和安全验证在弹出的本地浏览器中手动完成。
 
 详细步骤见[中文新手指南](docs/zh-CN/beginner-guide.md)或[English Beginner Guide](docs/en/beginner-guide.md)。
