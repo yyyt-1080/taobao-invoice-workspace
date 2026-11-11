@@ -9,10 +9,12 @@ This guide is for people who use Piao Jia without changing its code. The app run
 1. Install Node.js 22.13 or newer.
 2. Download and unzip the GitHub repository.
 3. Double-click `Setup.command` on macOS or `Setup.bat` on Windows. The first setup downloads dependencies and Chromium and may take a few minutes.
-4. Edit `engine/invoice-config.json` with your own invoice title, tax number, and email. Do not send this file to anyone or upload it to GitHub.
+4. Select **Invoice details** in the sidebar, enter your invoice title, tax number, email, and other details, then save. The details stay on this computer; do not share local data files or upload them to GitHub.
 5. Double-click `Start.command` (macOS) or `Start.bat` (Windows). Keep the terminal window open and visit <http://127.0.0.1:4318>.
 
 Complete Taobao sign-in and verification yourself in the local browser window. Do not share the browser profile.
+
+New Events inherit the default invoice details. If an Event uses a different title or tax number, edit that Event and choose **Edit invoice details**; future applications for it use its own profile. ZIP export tries to read the project name and invoice total from the PDF or image. For invoices with multiple items, it uses only the first item row.
 
 ## 2. Create an Event and scan
 
@@ -60,7 +62,7 @@ Select **Export**, choose orders with linked invoice files, and select **Export 
 ## Troubleshooting
 
 - **The page will not open:** make sure the Start window is still running, then open `http://127.0.0.1:4318`.
-- **Configuration missing:** create and fill in `engine/invoice-config.json` from the example.
+- **Invoice details are missing:** enter the invoice title and tax number under **Invoice details** and save.
 - **A verification prompt appears:** complete it manually in the Taobao browser; do not enter verification codes into Piao Jia.
 - **The PDF amount cannot be checked:** open the saved file from Details and review its contents and order association manually.
 - **The computer sleeps or the service stops:** the task will not continue. After restart, inspect Taobao and the task results before scanning again.
