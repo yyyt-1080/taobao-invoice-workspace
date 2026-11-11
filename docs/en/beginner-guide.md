@@ -67,51 +67,22 @@ Setup downloads project dependencies and the Chromium browser used by Playwright
 2. Double-click it. A command window shows the installation progress.
 3. When you see `Setup complete`, press Enter as prompted to close the window.
 
-### Step 5: Enter your invoice details
-
-First-time setup automatically copies the example to `engine/invoice-config.json`. **This is not a form on the website**; edit this local JSON file with a text editor. Its location is:
-
-```text
-taobao-invoice-workspace/
-└── engine/
-    └── invoice-config.json
-```
-
-- **macOS:** Open the project's `engine` folder, then open `invoice-config.json` with a text editor such as TextEdit.
-- **Windows:** Open the project's `engine` folder, right-click `invoice-config.json`, and choose Notepad.
-
-The file will look similar to the example below. Replace the example text in the first three fields with your invoice title, tax number, and receiving email. Leave the other fields as empty strings if you do not need them yet:
-
-```json
-{
-  "companyName": "Your invoice title",
-  "taxNo": "Your taxpayer identification number",
-  "email": "Email address for receiving invoices",
-  "phone": "",
-  "address": "",
-  "bankName": "",
-  "bankAccount": "",
-  "paperShippingName": "",
-  "paperShippingPhone": "",
-  "paperShippingAddress": "",
-  "sellerMessageTemplate": "您好，这笔订单需要申请开具发票。订单号：{orderId}。烦请协助开具发票。发票信息如下：发票抬头：{companyName}；税号：{taxNo}；发票类型：{invoiceType}；接收邮箱：{email}。如需补充信息，请告知，谢谢。"
-}
-```
-
-Replace only the text inside quotation marks. Keep the JSON quotation marks, commas, and braces. Save the file; Piao Jia reads it when it starts. Do not share your real configuration or commit it to GitHub.
-
-If `invoice-config.json` is missing, confirm Setup completed successfully. `invoice-config.example.json` is the sample tracked in the repository; enter personal information in the generated `invoice-config.json` beside it. Do not overwrite the sample or commit real configuration to the repository.
-
-### Step 6: Start Piao Jia and sign in to Taobao
+### Step 5: Start Piao Jia and enter your invoice details
 
 1. Return to the top level of the project folder.
 2. Double-click `Start.command` on macOS or `Start.bat` on Windows.
 3. Keep the Terminal/command window open. Visit <http://127.0.0.1:4318> in a browser.
-4. Create or open an Event. When scanning, sign in to Taobao and complete any security checks in the Taobao browser window.
+4. Select **Invoice details** in the sidebar. Enter your invoice title and tax number. Add email, phone, address, bank, and paper invoice delivery details as needed, then select **Save invoice details**. Later invoice applications use these details. Do not share the local configuration file or commit it to GitHub.
+
+### Step 6: Sign in to Taobao and scan
+
+Create or open an Event. When scanning, sign in to Taobao and complete any security checks in the Taobao browser window.
 
 When creating an Event, you can add multiple purchase-date ranges, such as Oct 20–24, Oct 28, and Oct 30–31. Add each range on its own row; for a single day, use the same start and end date. Scanning checks orders in the selected ranges and also includes manually added orders in that Event, regardless of their dates.
 
 Do not close the startup window or let the computer sleep during a scan. Progress appears in Task history and updates in the Event order table.
+
+New Events inherit the default invoice details. If an Event uses a different title or tax number, edit that Event and choose **Edit invoice details**; future applications for it use its own profile. ZIP export tries to read the project name and invoice total from the PDF or image. For invoices with multiple items, it uses only the first item row.
 
 ## 2. Everyday use
 
