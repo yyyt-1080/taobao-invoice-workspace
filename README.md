@@ -24,6 +24,8 @@
 
 ## 文档
 
+- [使用 Git 克隆和更新（Mac 与 Windows）](docs/zh-CN/git-guide.md)
+
 - [新手指南（中文）](docs/zh-CN/beginner-guide.md) · [English Beginner Guide](docs/en/beginner-guide.md)
 - [详细使用指南（中文）](docs/zh-CN/user-guide.md) · [Detailed User Guide](docs/en/user-guide.md)
 - [开发指南（中文）](docs/zh-CN/developer-guide.md) · [English Developer Guide](docs/en/developer-guide.md)
